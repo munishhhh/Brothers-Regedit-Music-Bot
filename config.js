@@ -11,10 +11,16 @@ module.exports = {
     // ── Lavalink Nodes ──────────────────────────────
     nodes: [
         {
-            name: "Main Node",
-            url: `${process.env.LAVALINK_HOST || "localhost"}:${process.env.LAVALINK_PORT || 2333}`,
-            auth: process.env.LAVALINK_PASSWORD || "youshallnotpass",
-            secure: process.env.LAVALINK_SECURE === "true",
+            name: "Kitsune Public Node",
+            url: "lavalink.freelavalink.us:443",
+            auth: "https://dsc.gg/freelavalink",
+            secure: true,
+        },
+        {
+            name: "Koto Public Node",
+            url: "node.kotonodes.xyz:443",
+            auth: "kotonodes.xyz",
+            secure: true,
         }
     ],
 

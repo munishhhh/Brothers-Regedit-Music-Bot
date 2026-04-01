@@ -151,5 +151,18 @@ process.on("uncaughtException", (err) => {
     logger.error("Uncaught Exception:", err?.message || err);
 });
 
+// ── Web Server for 24/7 Hosting (UptimeRobot) ───────
+const express = require('express');
+const app = express();
+const port = process.env.PORT || 3000;
+
+app.get('/', (req, res) => {
+    res.send('Bot is Alive! Ready for UptimeRobot.');
+});
+
+app.listen(port, () => {
+    logger.info(`Web server listening on port ${port} (for 24/7 uptime)`);
+});
+
 // ── Login ───────────────────────────────────────────
 client.login(process.env.TOKEN);
