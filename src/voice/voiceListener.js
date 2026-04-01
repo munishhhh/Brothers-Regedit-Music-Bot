@@ -63,6 +63,14 @@ async function listenToUser(guild, voiceChannel, userId) {
             return null;
         }
 
+        // ── Check audio duration ────────────────────────
+        // 48000 Hz * 2 channels * 2 bytes = 192000 bytes/sec
+        // Less than 0.5s (96000 bytes) is usually noise or a decoder error
+        if (pcmBuffer.length < 96000) {
+            logger.warn(`[Voice] Audio too short (${pcmBuffer.length} bytes), ignoring to save API quota`);
+            return null;
+        }
+
         // ── Check audio level ───────────────────────────
         const rms = calculateRMS(pcmBuffer);
         logger.info(`[Voice] PCM size: ${pcmBuffer.length}, RMS: ${rms.toFixed(0)}`);

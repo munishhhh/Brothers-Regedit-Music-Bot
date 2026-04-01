@@ -82,7 +82,10 @@ async function handleVoiceListen(context, client, isPrefix = false) {
         logger.info("[Listen] Saving player state & pausing for voice capture...");
 
         try {
-            existingPlayer.destroy();
+            const destroyResult = existingPlayer.destroy();
+            if (destroyResult && typeof destroyResult.catch === 'function') {
+                destroyResult.catch(e => logger.warn("[Listen] Async error destroying player:", e.message));
+            }
         } catch (err) {
             logger.warn("[Listen] Error destroying player:", err.message);
         }
