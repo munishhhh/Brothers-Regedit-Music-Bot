@@ -318,7 +318,7 @@ async function transcribeWithGemini(wavBuffer, token) {
     try {
         const genAI = new GoogleGenerativeAI(token);
         // Using Google's newest and fastest native audio model
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 
         logger.info(`[Voice] Sending ${wavBuffer.length} bytes to Gemini API...`);
 
