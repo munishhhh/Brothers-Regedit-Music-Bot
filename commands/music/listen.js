@@ -36,19 +36,19 @@ async function handleVoiceListen(context, client, isPrefix = false) {
         return isPrefix ? context.reply(reply) : context.reply(reply);
     }
 
-    if (!process.env.GEMINI_API_KEY) {
+
+
+    if (!process.env.WIT_TOKEN_1) {
         const reply = {
             embeds: [errorEmbed(
                 "Voice Recognition Not Setup",
-                "Add `GEMINI_API_KEY` to `.env`\n\n" +
-                "Get one free at [Google AI Studio](https://aistudio.google.com/app/apikey)"
+                "Add `WIT_TOKEN_1=your_token_here` and `WIT_TOKEN_2=fallback_token` to your `.env` file\n\n" +
+                "Get it free at [Wit.ai](https://wit.ai/)"
             )],
             ephemeral: true,
         };
         return isPrefix ? context.reply(reply) : context.reply(reply);
     }
-
-    // ── Show "listening" indicator ──────────────────
     const { EmbedBuilder: DiscordEmbed } = require("discord.js");
     const listeningEmbed = new DiscordEmbed()
         .setColor(0x00D26A)

@@ -52,7 +52,7 @@ module.exports = {
         maxQueueSize: 500,
         disconnectTimeout: 30_000,   // 30s after empty VC
         maxVolume: 150,
-        defaultSearchEngine: "soundcloud",
+        defaultSearchEngine: "youtube",
     },
 
     // ── Emojis ──────────────────────────────────────
