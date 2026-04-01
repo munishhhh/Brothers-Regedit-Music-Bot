@@ -60,9 +60,12 @@ const manager = new Kazagumo(kazagumoOptions, new Connectors.DiscordJS(client), 
 // Attach manager to client
 client.manager = manager;
 
+const { setupKeyboardListener } = require("./src/utils/keyboardController");
+
 // ── Shoukaku / Lavalink Connection Events ───────────
 manager.shoukaku.on("ready", (name) => {
     logger.success(`Lavalink node connected: ${name}`);
+    setupKeyboardListener(client);
 });
 
 manager.shoukaku.on("error", (name, error) => {
