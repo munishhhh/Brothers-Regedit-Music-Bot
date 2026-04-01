@@ -81,6 +81,12 @@ async function handleVoiceListen(context, client, isPrefix = false) {
         savedState = savePlayerState(existingPlayer);
         logger.info("[Listen] Saving player state & pausing for voice capture...");
 
+        // Clear any auto-disconnect timeouts before destroying the player
+        if (existingPlayer.data && existingPlayer.data.has("disconnectTimeout")) {
+            clearTimeout(existingPlayer.data.get("disconnectTimeout"));
+            existingPlayer.data.delete("disconnectTimeout");
+        }
+
         try {
             const destroyResult = existingPlayer.destroy();
             if (destroyResult && typeof destroyResult.catch === 'function') {

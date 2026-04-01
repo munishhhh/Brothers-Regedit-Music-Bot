@@ -17,6 +17,12 @@ module.exports = {
                 await prevMsg.delete().catch(() => {});
             }
 
+            // Clear any lingering auto-disconnect timeouts
+            if (player.data && player.data.has("disconnectTimeout")) {
+                clearTimeout(player.data.get("disconnectTimeout"));
+                player.data.delete("disconnectTimeout");
+            }
+
             // Build now-playing embed
             const embed = nowPlayingEmbed(track, player);
             const buttons = playerButtons(player);
