@@ -2,7 +2,7 @@ const { ActivityType } = require("discord.js");
 const logger = require("../../src/utils/logger");
 
 module.exports = {
-    name: "clientReady",
+    name: "ready",
     once: true,
 
     execute(client) {
