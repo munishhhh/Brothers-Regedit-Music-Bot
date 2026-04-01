@@ -181,13 +181,13 @@ setInterval(() => {
 // ── Web Server for 24/7 Hosting (UptimeRobot) ───────
 const express = require('express');
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || process.env.SERVER_PORT || 3000;
 
 app.get('/', (req, res) => {
     res.send('Bot is Alive! Ready for UptimeRobot.');
 });
 
-app.listen(port, () => {
+app.listen(port, "0.0.0.0", () => {
     logger.info(`Web server listening on port ${port} (for 24/7 uptime)`);
 });
 

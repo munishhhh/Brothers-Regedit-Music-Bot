@@ -1,4 +1,3 @@
-const { GlobalKeyboardListener } = require("node-global-key-listener");
 const logger = require("./logger");
 
 let isInitialized = false;
@@ -7,6 +6,11 @@ function setupKeyboardListener(client) {
     if (isInitialized) return;
     
     try {
+        if (process.platform !== "win32") {
+            // Wispbyte/Linux hosts don't support global key listeners
+            return;
+        }
+        const { GlobalKeyboardListener } = require("node-global-key-listener");
         const v = new GlobalKeyboardListener();
         logger.info("Host Media-Key bindings loaded (Play/Pause/Next/Prev directly from PC)");
         isInitialized = true;
