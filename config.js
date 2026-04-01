@@ -11,9 +11,15 @@ module.exports = {
     // ── Lavalink Nodes ──────────────────────────────
     nodes: [
         {
-            name: "LexNet Node",
-            url: "lavalink.lexnet.cc:443",
-            auth: "lexn3t_@!",
+            name: "Oops WTF Node",
+            url: "lavalink.oops.wtf",
+            auth: "www.freelavalink.wtf",
+            secure: true,
+        },
+        {
+            name: "DevamSHR Node",
+            url: "lavalink.devamshr.dev",
+            auth: "pass",
             secure: true,
         },
         {
@@ -21,12 +27,6 @@ module.exports = {
             url: "lavalink.jirayu.net:443",
             auth: "youshallnotpass",
             secure: true,
-        },
-        {
-            name: "Lava Link V3",
-            url: "lava.link:80",
-            auth: "youshallnotpass",
-            secure: false,
         }
     ],
 
@@ -52,7 +52,7 @@ module.exports = {
         maxQueueSize: 500,
         disconnectTimeout: 30_000,   // 30s after empty VC
         maxVolume: 150,
-        defaultSearchEngine: "youtube",
+        defaultSearchEngine: "soundcloud",
     },
 
     // ── Emojis ──────────────────────────────────────
