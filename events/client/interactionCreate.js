@@ -1,6 +1,7 @@
 const logger = require("../../src/utils/logger");
 const db = require("../../src/utils/db");
 const { errorEmbed, successEmbed, nowPlayingEmbed, playerButtons } = require("../../src/structures/EmbedBuilder");
+const { handleVoiceListen } = require("../../commands/music/listen");
 
 module.exports = {
     name: "interactionCreate",
@@ -63,6 +64,23 @@ async function handleButton(interaction, client) {
             }
             return;
         }
+    }
+
+    // ── 🎤 Voice Request button (special — handled before player check) ──
+    if (interaction.customId === "music_voice_request") {
+        const member = interaction.member;
+        const voiceChannel = member?.voice?.channel;
+
+        if (!voiceChannel) {
+            return interaction.reply({
+                embeds: [errorEmbed("Not in Voice", "You need to be in a voice channel to use voice requests.")],
+                ephemeral: true,
+            }).catch(() => {});
+        }
+
+        // Use the same handler as /listen command
+        await handleVoiceListen(interaction, client, false);
+        return;
     }
 
     // ── Music control buttons ───────────────────────

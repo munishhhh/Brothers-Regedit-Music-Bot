@@ -164,7 +164,7 @@ async function playMood(mood, context, client) {
                 textId: context.channel?.id || context.member.voice.channel.id, // fallback for prefix
                 voiceId: context.member.voice.channel.id,
                 volume: config.player.defaultVolume,
-                deaf: true
+                deaf: false
             });
         } catch (err) {
             return context.editReply({ embeds: [errorEmbed("Connection Error", "Could not join your voice channel. Check permissions!")] });

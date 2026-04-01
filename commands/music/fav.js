@@ -94,7 +94,7 @@ module.exports = {
                         textId: interaction.channelId,
                         voiceId: voiceChannel.id,
                         volume: config.player.defaultVolume,
-                        deaf: true
+                        deaf: false
                     });
                 } catch (err) {
                     return interaction.editReply({ embeds: [errorEmbed("Connection Error", "Could not join your VC.")] });
@@ -152,7 +152,7 @@ module.exports = {
                     guildId: message.guild.id,
                     textId: message.channelId,
                     voiceId: message.member.voice.channel.id,
-                    volume: 80, deaf: true
+                    volume: 80, deaf: false
                 });
             }
 

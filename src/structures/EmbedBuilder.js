@@ -95,7 +95,12 @@ function playerButtons(player) {
         new ButtonBuilder()
             .setCustomId("music_fav")
             .setEmoji("❤️")
-            .setStyle(ButtonStyle.Secondary)
+            .setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder()
+            .setCustomId("music_voice_request")
+            .setEmoji("🎤")
+            .setLabel("Voice Request")
+            .setStyle(ButtonStyle.Success)
     );
 
     return [row1, row2];

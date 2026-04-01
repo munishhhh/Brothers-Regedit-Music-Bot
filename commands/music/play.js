@@ -69,7 +69,7 @@ module.exports = {
                     guildId: guild.id,
                     voiceId: voiceChannel.id,
                     textId: interaction.channelId,
-                    deaf: true,
+                    deaf: false,
                     volume: config.defaultVolume,
                 });
             }
@@ -203,7 +203,7 @@ module.exports = {
                     guildId: message.guild.id,
                     voiceId: voiceChannel.id,
                     textId: message.channelId,
-                    deaf: true,
+                    deaf: false,
                     volume: config.defaultVolume,
                 });
             }
