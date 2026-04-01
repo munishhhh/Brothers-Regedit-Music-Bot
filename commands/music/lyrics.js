@@ -3,6 +3,49 @@ const Genius = require("genius-lyrics");
 const Client = new Genius.Client();
 const { errorEmbed, successEmbed } = require("../../src/structures/EmbedBuilder");
 const config = require("../../config");
+const https = require("https");
+
+function fetchLrcLib(query) {
+    return new Promise((resolve) => {
+        const url = `https://lrclib.net/api/search?q=${encodeURIComponent(query)}`;
+        https.get(url, { headers: { "User-Agent": "DiscordBot (https://github.com/)" } }, (res) => {
+            let data = "";
+            res.on("data", chunk => data += chunk);
+            res.on("end", () => {
+                if (res.statusCode === 200) {
+                    try {
+                        let json = JSON.parse(data);
+                        resolve(json);
+                    } catch (e) {
+                        resolve([]);
+                    }
+                } else {
+                    resolve([]);
+                }
+            });
+        }).on("error", () => resolve([]));
+    });
+}
+
+async function getLyrics(query) {
+    try {
+        const lrcRes = await fetchLrcLib(query);
+        if (lrcRes && lrcRes.length > 0) {
+            let track = lrcRes[0];
+            let lyrics = track.plainLyrics || track.syncedLyrics;
+            if (lyrics) return lyrics;
+        }
+    } catch(e) {}
+    
+    try {
+        const searches = await Client.songs.search(query);
+        if (searches && searches.length > 0) {
+            return await searches[0].lyrics();
+        }
+    } catch (err) {}
+    
+    return null;
+}
 
 module.exports = {
     aliases: ["ly"],
@@ -37,15 +80,7 @@ module.exports = {
         }
 
         try {
-            let lyrics = null;
-            try {
-                const searches = await Client.songs.search(query);
-                if (searches && searches.length > 0) {
-                    lyrics = await searches[0].lyrics();
-                }
-            } catch (err) {
-                // Ignore API scrape errors, handled below
-            }
+            let lyrics = await getLyrics(query);
             
             if (!lyrics) {
                 return interaction.editReply({
@@ -102,13 +137,7 @@ module.exports = {
         const reply = await message.reply("⏳ Fetching live lyrics...");
 
         try {
-            let lyrics = null;
-            try {
-                const searches = await Client.songs.search(query);
-                if (searches && searches.length > 0) {
-                    lyrics = await searches[0].lyrics();
-                }
-            } catch (err) {}
+            let lyrics = await getLyrics(query);
 
             if (!lyrics) return reply.edit({ embeds: [errorEmbed("Not Found", `Could not find any lyrics matching \`${query}\`.`)] });
 
