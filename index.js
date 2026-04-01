@@ -1,5 +1,9 @@
 require("dotenv").config();
 
+// ── FIX FOR WISPBYTE / PTERODACTYL IPV6 HANGS ───────
+const dns = require('node:dns');
+dns.setDefaultResultOrder('ipv4first');
+
 const { Client, GatewayIntentBits, ActivityType } = require("discord.js");
 const { Kazagumo, Plugins } = require("kazagumo");
 const { Connectors } = require("shoukaku");
@@ -192,4 +196,13 @@ app.listen(port, "0.0.0.0", () => {
 });
 
 // ── Login ───────────────────────────────────────────
-client.login(process.env.TOKEN);
+// UNCONDITIONAL DEBUG MODE FOR WISPBYTE HANGS
+client.on("debug", (msg) => {
+    console.log(`[DJS-DEBUG] ${msg}`);
+});
+
+client.login(process.env.TOKEN).then(() => {
+    logger.info("Discord validation successful! Waiting for gateway ready event...");
+}).catch((err) => {
+    logger.error("Failed to login to Discord! Please check your TOKEN and Intents.", err);
+});
