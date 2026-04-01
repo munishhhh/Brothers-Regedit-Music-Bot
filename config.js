@@ -11,16 +11,22 @@ module.exports = {
     // ── Lavalink Nodes ──────────────────────────────
     nodes: [
         {
-            name: "Kitsune Public Node",
-            url: "lavalink.freelavalink.us:443",
-            auth: "https://dsc.gg/freelavalink",
+            name: "LexNet Node",
+            url: "lavalink.lexnet.cc:443",
+            auth: "lexn3t_@!",
             secure: true,
         },
         {
-            name: "Koto Public Node",
-            url: "node.kotonodes.xyz:443",
-            auth: "kotonodes.xyz",
+            name: "Jirayu Node",
+            url: "lavalink.jirayu.net:443",
+            auth: "youshallnotpass",
             secure: true,
+        },
+        {
+            name: "Lava Link V3",
+            url: "lava.link:80",
+            auth: "youshallnotpass",
+            secure: false,
         }
     ],
 
