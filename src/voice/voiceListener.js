@@ -142,7 +142,7 @@ function recordWithPrismDecoder(connection, userId) {
             if (silenceTimer) clearTimeout(silenceTimer);
             if (maxTimer) clearTimeout(maxTimer);
             try { opusStream.destroy(); } catch {}
-            try { decoder.destroy(); } catch {}
+            try { if (opusDecoder) opusDecoder.delete(); } catch {}
 
             if (!hasData || pcmChunks.length === 0) {
                 logger.warn(`[Voice] No voice data (${reason})`);
@@ -161,50 +161,49 @@ function recordWithPrismDecoder(connection, userId) {
             end: { behavior: EndBehaviorType.Manual },
         });
 
-        // Create prism-media Opus decoder (decodes Opus → PCM stream)
-        const decoder = new prism.opus.Decoder({
-            rate: SAMPLE_RATE,
-            channels: CHANNELS,
-            frameSize: 960,
-        });
+        // We use opusscript directly instead of prism-media's Decoder stream
+        // This allows us to catch decode errors per-packet and ignore them,
+        // rather than the stream crashing and aborting the entire recording.
+        let opusDecoder;
+        try {
+            const OpusScript = require("opusscript");
+            // 48000 Hz, 2 channels, application AUDIO
+            opusDecoder = new OpusScript(SAMPLE_RATE, CHANNELS, OpusScript.Application.AUDIO);
+        } catch (e) {
+            logger.error("[Voice] OpusScript is missing! Ensure it is installed.");
+            resolve(null);
+            return;
+        }
 
         logger.info(`[Voice] 🎤 Listening to user ${userId}...`);
 
-        // Manually feed Opus packets to decoder
-        // We do this instead of pipe() so we can filter out Discord's 3-byte silence packets 
-        // which crash the prism-media decoder with "Invalid packet" errors
         opusStream.on("data", (chunk) => {
-            if (chunk.length < 5) return;
-            if (!decoder.destroyed) {
-                decoder.write(chunk);
+            if (chunk.length < 5) return; // Drop known Discord silent frames
+
+            try {
+                // Decode Opus to PCM manually
+                const pcmChunk = opusDecoder.decode(chunk);
+
+                hasData = true;
+                pcmChunks.push(pcmChunk);
+
+                // Reset silence timer on each valid PCM chunk
+                if (silenceTimer) clearTimeout(silenceTimer);
+
+                const elapsed = Date.now() - startTime;
+                if (elapsed >= MIN_LISTEN_MS) {
+                    silenceTimer = setTimeout(() => {
+                        finish("silence detected");
+                    }, SILENCE_THRESHOLD_MS);
+                }
+            } catch (err) {
+                // We IGNORE individual packet decoding errors (often "Invalid packet" from glitches)
+                // so the stream stays alive and captures the rest of the user's speech!
             }
         });
+
         opusStream.on("end", () => {
-            if (!decoder.destroyed) decoder.end();
-        });
-
-        decoder.on("data", (pcmChunk) => {
-            hasData = true;
-            pcmChunks.push(pcmChunk);
-
-            // Reset silence timer on each PCM chunk
-            if (silenceTimer) clearTimeout(silenceTimer);
-
-            const elapsed = Date.now() - startTime;
-            if (elapsed >= MIN_LISTEN_MS) {
-                silenceTimer = setTimeout(() => {
-                    finish("silence detected");
-                }, SILENCE_THRESHOLD_MS);
-            }
-        });
-
-        decoder.on("error", (err) => {
-            logger.error(`[Voice] Decoder error: ${err.message}`);
-            finish("decoder error");
-        });
-
-        decoder.on("end", () => {
-            finish("decoder stream ended");
+            finish("opus stream ended");
         });
 
         opusStream.on("error", (err) => {
@@ -212,7 +211,6 @@ function recordWithPrismDecoder(connection, userId) {
         });
 
         opusStream.on("close", () => {
-            // Give decoder a moment to flush remaining data
             setTimeout(() => finish("opus stream closed"), 200);
         });
 
