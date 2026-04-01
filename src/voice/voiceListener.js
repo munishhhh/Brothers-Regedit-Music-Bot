@@ -12,8 +12,8 @@ const logger = require("../utils/logger");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 // ── Constants ──────────────────────────────────────
-const SILENCE_THRESHOLD_MS = 1800;
-const MAX_LISTEN_MS = 12000;
+const SILENCE_THRESHOLD_MS = 2500;
+const MAX_LISTEN_MS = 15000;
 const MIN_LISTEN_MS = 1000;
 const SAMPLE_RATE = 48000;
 const TARGET_RATE = 16000;
