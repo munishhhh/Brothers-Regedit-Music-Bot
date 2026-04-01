@@ -107,7 +107,7 @@ client.on("messageCreate", async (message) => {
     // Detect if the message starts with any allowed prefix
     const prefixes = Array.isArray(config.prefix) ? config.prefix : [config.prefix];
     const prefix = prefixes.find(p => message.content.toLowerCase().startsWith(p));
-    
+
     if (!prefix) return;
 
     const args = message.content.slice(prefix.length).trim().split(/ +/);
@@ -120,7 +120,7 @@ client.on("messageCreate", async (message) => {
         await command.prefixExecute(message, args, client);
     } catch (err) {
         logger.error(`Prefix command error (${commandName}):`, err.message);
-        message.reply("❌ An error occurred while executing that command.").catch(() => {});
+        message.reply("❌ An error occurred while executing that command.").catch(() => { });
     }
 });
 
@@ -132,7 +132,7 @@ const shutdown = async (signal) => {
     for (const [, player] of manager.players) {
         try {
             player.destroy();
-        } catch {}
+        } catch { }
     }
 
     // Destroy client
@@ -150,6 +150,33 @@ process.on("unhandledRejection", (err) => {
 process.on("uncaughtException", (err) => {
     logger.error("Uncaught Exception:", err?.message || err);
 });
+
+// ── Voice Debug WAV Auto Cleanup ────────────────────
+const fs = require('fs');
+const path = require('path');
+setInterval(() => {
+    const outputsDir = path.join(__dirname, "outputs");
+    if (!fs.existsSync(outputsDir)) return;
+    
+    fs.readdir(outputsDir, (err, files) => {
+        if (err) return;
+        const now = Date.now();
+        files.forEach(file => {
+            if (file.endsWith('.wav') || file.endsWith('.pcm')) {
+                const filePath = path.join(outputsDir, file);
+                fs.stat(filePath, (err, stats) => {
+                    if (err) return;
+                    // Delete debug audio files older than 5 minutes
+                    if (now - stats.mtimeMs > 5 * 60 * 1000) {
+                        fs.unlink(filePath, () => {
+                            logger.info(`[Cleanup] Auto-deleted old voice debug file: ${file}`);
+                        });
+                    }
+                });
+            }
+        });
+    });
+}, 5 * 60 * 1000); // Check every 5 minutes
 
 // ── Web Server for 24/7 Hosting (UptimeRobot) ───────
 const express = require('express');
