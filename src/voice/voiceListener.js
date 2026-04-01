@@ -343,24 +343,39 @@ async function transcribeWithWitAi(wavBuffer, token) {
 
             res.on('end', () => {
                 try {
-                    // Wit.ai returns chunked JSON updates (Server-Sent Events style without framing)
-                    // We split by newline and find the last valid text
-                    const lines = data.split('\\n');
                     let finalRecognizedText = null;
+                    try {
+                        const jsonArrStr = '[' + data.trim().replace(/}\s*\{/g, '},{') + ']';
+                        const chunks = JSON.parse(jsonArrStr);
 
-                    for (const line of lines) {
-                        const trimmed = line.trim();
-                        if (!trimmed) continue;
-                        try {
-                            const parsed = JSON.parse(trimmed);
-                            if (parsed.is_final && parsed.text) {
-                                finalRecognizedText = parsed.text;
+                        for (const chunk of chunks) {
+                            if ((chunk.type === "FINAL_TRANSCRIPTION" || chunk.is_final) && chunk.text) {
+                                finalRecognizedText = chunk.text;
                                 break;
-                            } else if (parsed.text) {
-                                finalRecognizedText = parsed.text;
+                            } else if (chunk.text) {
+                                finalRecognizedText = chunk.text;
+                            }
+                        }
+                    } catch (err) {
+                        try {
+                            const lines = data.split('\n');
+                            for (const line of lines) {
+                                const trimmed = line.trim();
+                                if (!trimmed) continue;
+                                const parsed = JSON.parse(trimmed);
+                                if ((parsed.type === "FINAL_TRANSCRIPTION" || parsed.is_final) && parsed.text) {
+                                    finalRecognizedText = parsed.text;
+                                    break;
+                                } else if (parsed.text) {
+                                    finalRecognizedText = parsed.text;
+                                }
                             }
                         } catch (e) {
-                            // ignore partial json parsing errors
+                            const matches = data.match(/"text"\s*:\s*"([^"]+)"/g);
+                            if (matches && matches.length > 0) {
+                                const last = matches[matches.length - 1];
+                                finalRecognizedText = last.replace(/"text"\s*:\s*"/, '').replace(/"$/, '');
+                            }
                         }
                     }
 
