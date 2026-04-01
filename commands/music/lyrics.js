@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
-const finder = require("lyrics-finder");
+const Genius = require("genius-lyrics");
+const Client = new Genius.Client();
 const { errorEmbed, successEmbed } = require("../../src/structures/EmbedBuilder");
 const config = require("../../config");
 
@@ -36,11 +37,19 @@ module.exports = {
         }
 
         try {
-            let lyrics = await finder("", query);
+            let lyrics = null;
+            try {
+                const searches = await Client.songs.search(query);
+                if (searches && searches.length > 0) {
+                    lyrics = await searches[0].lyrics();
+                }
+            } catch (err) {
+                // Ignore API scrape errors, handled below
+            }
             
             if (!lyrics) {
                 return interaction.editReply({
-                    embeds: [errorEmbed("Not Found", `Could not find any lyrics matching \`${query}\``)]
+                    embeds: [errorEmbed("Not Found", `Could not find any lyrics matching \`${query}\`.`)]
                 });
             }
 
@@ -93,8 +102,15 @@ module.exports = {
         const reply = await message.reply("⏳ Fetching live lyrics...");
 
         try {
-            let lyrics = await finder("", query);
-            if (!lyrics) return reply.edit({ embeds: [errorEmbed("Not Found", `Could not find any lyrics matching \`${query}\``)] });
+            let lyrics = null;
+            try {
+                const searches = await Client.songs.search(query);
+                if (searches && searches.length > 0) {
+                    lyrics = await searches[0].lyrics();
+                }
+            } catch (err) {}
+
+            if (!lyrics) return reply.edit({ embeds: [errorEmbed("Not Found", `Could not find any lyrics matching \`${query}\`.`)] });
 
             const chunked_lyrics = lyrics.match(/[\s\S]{1,4090}/g) || ["No lyrics extracted."];
             
