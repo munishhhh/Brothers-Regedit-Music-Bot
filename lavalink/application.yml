@@ -1,0 +1,98 @@
+server:
+  port: 2333
+  address: 0.0.0.0
+  http2:
+    enabled: false
+
+lavalink:
+  plugins:
+    # YouTube Source Plugin (replaces deprecated built-in YouTube)
+    - dependency: "dev.lavalink.youtube:youtube-plugin:1.18.0"
+      snapshot: false
+    # LavaSrc — Spotify, Apple Music, Deezer support
+    - dependency: "com.github.topi314.lavasrc:lavasrc-plugin:4.3.0"
+      snapshot: false
+
+  server:
+    password: "youshallnotpass"
+    sources:
+      youtube: false  # Disabled — using youtube-plugin instead
+      bandcamp: true
+      soundcloud: true
+      twitch: true
+      vimeo: true
+      http: true
+      local: false
+
+    filters:
+      volume: true
+      equalizer: true
+      karaoke: true
+      timescale: true
+      tremolo: true
+      vibrato: true
+      distortion: true
+      rotation: true
+      channelMix: true
+      lowPass: true
+
+    bufferDurationMs: 800
+    frameBufferDurationMs: 5000
+    opusEncodingQuality: 10
+    resamplingQuality: HIGH
+    trackStuckThresholdMs: 10000
+    useSeekGhosting: true
+    youtubePlaylistLoadLimit: 100
+    playerUpdateInterval: 5
+    youtubeSearchEnabled: true
+    soundcloudSearchEnabled: true
+    gc-warnings: true
+
+plugins:
+  youtube:
+    enabled: true
+    allowSearch: true
+    allowDirectVideoIds: true
+    allowDirectPlaylistIds: true
+    clients:
+      - MUSIC
+      - ANDROID_VR
+      - WEB
+      - MWEB
+    # OAuth — Recommended to avoid rate limiting & age restrictions
+    # On first start, check console for Google auth URL
+    oauth:
+      enabled: true
+      skipInitialization: false
+
+  lavasrc:
+    providers:
+      - "ytsearch:\"%ISRC%\""
+      - "ytsearch:%QUERY%"
+    sources:
+      spotify: true
+      applemusic: false
+      deezer: false
+      yandexmusic: false
+      flowerytts: false
+      youtube: true
+    spotify:
+      clientId: "your_spotify_client_id"
+      clientSecret: "your_spotify_client_secret"
+      countryCode: "US"
+      playlistLoadLimit: 200
+      albumLoadLimit: 200
+
+logging:
+  file:
+    path: ./logs/
+  level:
+    root: INFO
+    lavalink: INFO
+  request:
+    enabled: true
+    includeClientInfo: true
+  logback:
+    rollingpolicy:
+      max-file-size: 50MB
+      max-history: 30
