@@ -196,11 +196,6 @@ app.listen(port, "0.0.0.0", () => {
 });
 
 // ── Login ───────────────────────────────────────────
-// UNCONDITIONAL DEBUG MODE FOR WISPBYTE HANGS
-client.on("debug", (msg) => {
-    console.log(`[DJS-DEBUG] ${msg}`);
-});
-
 client.login(process.env.TOKEN).then(() => {
     logger.info("Discord validation successful! Waiting for gateway ready event...");
 }).catch((err) => {
