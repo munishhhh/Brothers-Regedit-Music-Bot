@@ -230,7 +230,7 @@ async function handleVoiceListen(context, client, isPrefix = false) {
 
         const errEmbed = errorEmbed(
             "Voice Error",
-            err.message.includes("GEMINI_API_KEY") ? err.message : `Something went wrong: ${err.message}`
+            err.message.includes("WIT_TOKEN_1") ? err.message : `Something went wrong: ${err.message}`
         );
 
         if (isPrefix) {

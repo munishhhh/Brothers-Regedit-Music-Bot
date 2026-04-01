@@ -9,7 +9,6 @@ const https = require("https");
 const fs = require("fs");
 const path = require("path");
 const logger = require("../utils/logger");
-const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 // ── Constants ──────────────────────────────────────
 const SILENCE_THRESHOLD_MS = 2500;
@@ -25,9 +24,9 @@ const DEBUG_SAVE_WAV = true;
  * Listen to a user's voice in a Discord voice channel and transcribe it.
  */
 async function listenToUser(guild, voiceChannel, userId) {
-    const geminiKey = process.env.GEMINI_API_KEY;
-    if (!geminiKey) {
-        throw new Error("GEMINI_API_KEY is not configured in .env!");
+    const witToken = process.env.WIT_TOKEN_1 || process.env.WIT_TOKEN_2;
+    if (!witToken) {
+        throw new Error("API Error");
     }
 
     let connection;
@@ -105,7 +104,12 @@ async function listenToUser(guild, voiceChannel, userId) {
         }
 
         // ── Transcribe ──────────────────────────────────
-        const text = await transcribeWithGemini(wavBuffer, geminiKey);
+        let text = await transcribeWithWitAi(wavBuffer, process.env.WIT_TOKEN_1);
+        if (!text && process.env.WIT_TOKEN_2) {
+            logger.warn("[Voice] Primary Wit.ai token failed or empty result. Retrying with fallback...");
+            text = await transcribeWithWitAi(wavBuffer, process.env.WIT_TOKEN_2);
+        }
+        
         logger.info(`[Voice] Result: "${text || "(nothing)"}"`);
 
         return text;
@@ -311,39 +315,73 @@ function pcmToWav(pcm, rate, ch) {
 }
 
 // ────────────────────────────────────────────────────
-// Gemini AI Audio Transcription
+// Wit.ai Audio Transcription
 // ────────────────────────────────────────────────────
 
-async function transcribeWithGemini(wavBuffer, token) {
-    try {
-        const genAI = new GoogleGenerativeAI(token);
-        // Using Google's newest and fastest native audio model
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+async function transcribeWithWitAi(wavBuffer, token) {
+    if (!token) return null;
+    
+    return new Promise((resolve, reject) => {
+        logger.info(`[Voice] Sending ${wavBuffer.length} bytes to Wit.ai...`);
 
-        logger.info(`[Voice] Sending ${wavBuffer.length} bytes to Gemini API...`);
-
-        const prompt = "You are a music bot transcription AI. I am sending you a short audio clip of a user requesting a song. " +
-                       "Listen carefully and output ONLY the song name and artist they are asking for. " +
-                       "Do NOT include any conversational text (like 'The user said'). " +
-                       "If they said something mispronounced like 'failed airan walker', correct it to 'Faded Alan Walker'. " +
-                       "If they are speaking Hindi or another language, transcribe and translate the song intent clearly if needed, but the final output should be the best search query to find the requested song on YouTube.";
-
-        const result = await model.generateContent([
-            prompt,
-            {
-                inlineData: {
-                    data: wavBuffer.toString("base64"),
-                    mimeType: "audio/wav"
-                }
+        const options = {
+            hostname: 'api.wit.ai',
+            path: '/speech?v=20240304',
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'audio/wav',
+                'Content-Length': wavBuffer.length,
             }
-        ]);
+        };
 
-        const text = result.response.text();
-        return text ? text.trim() : null;
-    } catch (err) {
-        logger.error(`[Voice] Gemini API error: ${err.message}`);
-        return null;
-    }
+        const req = https.request(options, (res) => {
+            let data = '';
+            res.on('data', (chunk) => {
+                data += chunk.toString();
+            });
+
+            res.on('end', () => {
+                try {
+                    // Wit.ai returns chunked JSON updates (Server-Sent Events style without framing)
+                    // We split by newline and find the last valid text
+                    const lines = data.split('\\n');
+                    let finalRecognizedText = null;
+
+                    for (const line of lines) {
+                        const trimmed = line.trim();
+                        if (!trimmed) continue;
+                        try {
+                            const parsed = JSON.parse(trimmed);
+                            if (parsed.is_final && parsed.text) {
+                                finalRecognizedText = parsed.text;
+                                break;
+                            } else if (parsed.text) {
+                                finalRecognizedText = parsed.text;
+                            }
+                        } catch (e) {
+                            // ignore partial json parsing errors
+                        }
+                    }
+
+                    const result = finalRecognizedText ? finalRecognizedText.trim() : null;
+                    resolve(result);
+                } catch (err) {
+                    logger.error(`[Voice] Wit.ai parse error: ${err.message}`);
+                    resolve(null);
+                }
+            });
+        });
+
+        req.on('error', (err) => {
+            logger.error(`[Voice] Wit.ai network error: ${err.message}`);
+            resolve(null);
+        });
+
+        // Send the WAV data
+        req.write(wavBuffer);
+        req.end();
+    });
 }
 
 // ────────────────────────────────────────────────────
